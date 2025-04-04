@@ -5,6 +5,9 @@ using PinChecker.Models.Configurations;
 
 namespace PinChecker.Services.Implementations;
 
+/// <summary>
+/// Abstract base class for Playwright-based web scraping services that retrieve shop information.
+/// </summary>
 public abstract class BasePlaywrightService(IOptions<PlaywrightServiceConfig> config) : IPlaywrightService
 {
     #pragma warning disable CS8618
@@ -32,7 +35,7 @@ public abstract class BasePlaywrightService(IOptions<PlaywrightServiceConfig> co
         if (_page == null)
         {
             _playwright = await Playwright.CreateAsync();
-            _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = _config.Headless });
+            _browser = await _playwright.Chromium.LaunchAsync();
             _page = await _browser.NewPageAsync();
             await _page.GotoAsync(_config.Url, new PageGotoOptions
             {

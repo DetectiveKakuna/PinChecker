@@ -7,6 +7,9 @@ using System.Text.RegularExpressions;
 
 namespace PinChecker.Services.Implementations;
 
+/// <summary>
+/// Service implementation for retrieving Potato Pins shop inventory information.
+/// </summary>
 public class PotatoPinsService(IOptions<PlaywrightServiceConfig> config) : BasePlaywrightService(config)
 {
     protected async override Task<Shop> GetShopStatusAsync_Implementation()
