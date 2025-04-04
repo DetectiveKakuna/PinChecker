@@ -10,11 +10,9 @@ namespace PinChecker.Services.Implementations;
 /// </summary>
 public abstract class BasePlaywrightService(IOptions<PlaywrightServiceConfig> config) : IPlaywrightService
 {
-    #pragma warning disable CS8618
     private IPlaywright _playwright;
     private IBrowser _browser;
     protected IPage _page;
-    #pragma warning restore CS8618
     private readonly PlaywrightServiceConfig _config = config.Value;
 
     public async Task<Shop> GetShopStatusAsync()

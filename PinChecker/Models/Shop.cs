@@ -5,7 +5,6 @@
 /// </summary>
 public class Shop
 {
-#pragma warning disable CS8618
     /// <summary>
     /// The name identifier of the shop.
     /// </summary>
@@ -15,7 +14,6 @@ public class Shop
     /// Collection of items available in the shop.
     /// </summary>
     public List<ShopItem> Items { get; set; }
-#pragma warning restore CS8618
 
     /// <summary>
     /// Determines whether the specified object is equal to the current shop.

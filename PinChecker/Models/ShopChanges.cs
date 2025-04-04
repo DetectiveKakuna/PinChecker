@@ -5,7 +5,6 @@
 /// </summary>
 public class ShopChanges
 {
-#pragma warning disable CS8618
     /// <summary>
     /// The name identifier of the shop.
     /// </summary>
@@ -25,5 +24,4 @@ public class ShopChanges
     /// Collection of items removed from the shop's inventory.
     /// </summary>
     public List<ShopItem> RemovedItems { get; set; }
-#pragma warning restore CS8618
 }
