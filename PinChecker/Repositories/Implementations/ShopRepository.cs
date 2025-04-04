@@ -1,4 +1,5 @@
-﻿using PinChecker.Services;
+﻿using PinChecker.Models;
+using PinChecker.Services;
 
 namespace PinChecker.Repositories.Implementations;
 
@@ -6,11 +7,8 @@ public class ShopRepository(IEnumerable<IPlaywrightService> playwrightServices) 
 {
     private readonly List<IPlaywrightService> _playwrightServices = [.. playwrightServices];
 
-    public async Task Test()
+    public async Task GetShopChanges()
     {
-        foreach (var playwrightService in _playwrightServices)
-        {
-            await playwrightService.GetInventoryAsync();
-        }
+        List<Shop> shops = [.. (await Task.WhenAll(_playwrightServices.Select(service => service.GetShopStatusAsync())))];
     }
 }

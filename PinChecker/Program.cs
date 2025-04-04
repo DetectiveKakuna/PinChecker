@@ -1,40 +1,30 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using PinChecker.Models.Configurations;
 using PinChecker.Repositories;
 using PinChecker.Repositories.Implementations;
 using PinChecker.Services;
 using PinChecker.Services.Implementations;
 
-// Set up configuration
-var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
-Console.WriteLine($"Environment: {environment}");
 
 var configurationBuilder = new ConfigurationBuilder()
-    .SetBasePath(Directory.GetCurrentDirectory())
+    .SetBasePath(AppContext.BaseDirectory)
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-
-// Override with local settings if in local environment
-if (environment.Equals("local", StringComparison.OrdinalIgnoreCase))
-{
-    configurationBuilder.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
-}
 
 var configuration = configurationBuilder.Build();
 
 // Configure services
 var services = new ServiceCollection();
 
-// Register configuration sections
-services.Configure<PlaywrightServiceConfig>(configuration.GetSection("FantasyPinGarden"));
-services.Configure<PlaywrightServiceConfig>(configuration.GetSection("PinsPotato"));
+// Register configurations with named options
+services.Configure<PlaywrightServiceConfig>("PotatoPins", configuration.GetSection("PotatoPins"));
 
 // Register services
-services.AddTransient<IPlaywrightService, FantasyPinGardenService>();
-services.AddTransient<IPlaywrightService, PinsPotatoService>();
+services.AddScoped<IPlaywrightService>(sp => new PotatoPinsService(Options.Create(sp.GetRequiredService<IOptionsMonitor<PlaywrightServiceConfig>>().Get("PinsPotato"))));
 
-// Register repositories
-services.AddTransient<IShopRepository, ShopRepository>();
+// Register Repositories
+services.AddScoped<IShopRepository, ShopRepository>();
 
 // Build service provider
 var serviceProvider = services.BuildServiceProvider();
@@ -46,7 +36,7 @@ try
 {
     var shopRepository = scope.ServiceProvider.GetRequiredService<IShopRepository>();
     Console.WriteLine("Running IShopRepository.Test()...");
-    await shopRepository.Test();
+    await shopRepository.GetShopChanges();
     Console.WriteLine("Test completed successfully!");
 }
 catch (Exception ex)

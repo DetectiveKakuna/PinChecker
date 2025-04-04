@@ -2,5 +2,5 @@
 
 public interface IShopRepository
 {
-    Task Test();
+    Task GetShopChanges();
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using Microsoft.Playwright;
+using PinChecker.Models;
 using PinChecker.Models.Configurations;
 
 namespace PinChecker.Services.Implementations;
@@ -13,12 +14,12 @@ public abstract class BasePlaywrightService(IOptions<PlaywrightServiceConfig> co
     #pragma warning restore CS8618
     private readonly PlaywrightServiceConfig _config = config.Value;
 
-    public async Task GetInventoryAsync()
+    public async Task<Shop> GetShopStatusAsync()
     {
         await GoToPage();
-        await GetInventoryAsync_Implementation();
+        return await GetShopStatusAsync_Implementation();
     }
-    protected abstract Task GetInventoryAsync_Implementation();
+    protected abstract Task<Shop> GetShopStatusAsync_Implementation();
 
     /// <summary>
     /// Initializes Playwright, launches a browser instance, creates a new page,

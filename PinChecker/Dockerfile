@@ -1,26 +1,27 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
-ARG BUILD_CONFIGURATION=Release
+FROM mcr.microsoft.com/playwright/dotnet:v1.51.0-noble
 
-# Copy csproj and restore as distinct layers
-COPY ["PinChecker/PinChecker.csproj", "PinChecker/"]
-RUN dotnet restore "PinChecker/PinChecker.csproj"
-
-# Copy everything else and build
-COPY . .
-WORKDIR "/src/PinChecker"
-RUN dotnet publish "PinChecker.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
-
-# Build runtime image
-FROM mcr.microsoft.com/dotnet/runtime:8.0 AS final
 WORKDIR /app
 
-# For non-root user security best practice (with fallback if not set)
-ARG APP_UID=1000
-USER $APP_UID
+# Copy project files
+COPY PinChecker/. ./PinChecker/
 
-# Set environment
-ENV ASPNETCORE_ENVIRONMENT=local
+# Set environment variable for Playwright browsers
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
-COPY --from=build /app/publish .
+# Restore dependencies and publish
+WORKDIR /app/PinChecker
+RUN dotnet restore && \
+    dotnet publish -c Release -o /app/publish --runtime linux-x64 --self-contained false
+
+# Install Playwright browsers
+RUN cd /app/publish && \
+    pwsh -Command "& { \
+        Import-Module ./Microsoft.Playwright.dll; \
+        Install-Playwright -Force \
+    }"
+
+# Set the working directory to the publish directory
+WORKDIR /app/publish
+
+# Run the application
 ENTRYPOINT ["dotnet", "PinChecker.dll"]

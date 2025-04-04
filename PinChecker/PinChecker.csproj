@@ -6,9 +6,11 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="HtmlAgilityPack" Version="1.12.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="9.0.3" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.3" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.3" />
@@ -22,10 +24,17 @@
         <None Update="appsettings.json">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
-        <None Update="appsettings.local.json">
-            <DependentUpon>appsettings.json</DependentUpon>
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
     </ItemGroup>
-    
+
+    <ItemGroup>
+      <Folder Include="Databases\" />
+    </ItemGroup>
+
+    <Target Name="CopyPlaywrightDrivers" AfterTargets="Publish">
+        <ItemGroup>
+            <PlaywrightDrivers Include="$(ProjectDir)bin\Release\net8.0\.playwright\**\*.*" />
+        </ItemGroup>
+        <Copy SourceFiles="@(PlaywrightDrivers)" DestinationFolder="$(PublishDir)bin\.playwright\%(RecursiveDir)" />
+    </Target>
+
 </Project>
