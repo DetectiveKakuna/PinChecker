@@ -29,10 +29,6 @@
         </None>
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Databases\" />
-    </ItemGroup>
-
     <Target Name="CopyPlaywrightDrivers" AfterTargets="Publish">
         <ItemGroup>
             <PlaywrightDrivers Include="$(ProjectDir)bin\Release\net8.0\.playwright\**\*.*" />

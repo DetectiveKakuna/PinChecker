@@ -1,20 +1,106 @@
-﻿using PinChecker.Databases;
+﻿// Ignore Spelling: Upsert
+
+using PinChecker.Databases;
 using PinChecker.Models;
 using PinChecker.Services;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace PinChecker.Repositories.Implementations;
 
 /// <summary>
-/// Implementation of the shop repository that manages shop inventory changes using Cosmos DB and Playwright services.
+/// Implementation of the shop repository that manages shops.
 /// </summary>
 public class ShopRepository(ICosmosDb cosmosDb, IEnumerable<IPlaywrightService> playwrightServices) : IShopRepository
 {
     private readonly ICosmosDb _cosmosDb = cosmosDb;
     private readonly List<IPlaywrightService> _playwrightServices = [.. playwrightServices];
+    
+    private List<Shop> _shops = [];
 
-    public async Task GetShopChanges()
+    public async Task<IEnumerable<ShopChanges>> GetShopChangesAsync()
     {
-        List<Shop> shops = [.. (await Task.WhenAll(_playwrightServices.Select(service => service.GetShopStatusAsync())))];
+        _shops = await GetShopsAsync();
         List<Shop> existingRecords = [.. (await _cosmosDb.GetShopRecordsAsync())];
+
+        // Check for missing or empty shops compared to existing records
+        foreach (var existingShop in existingRecords)
+        {
+            var currentShop = _shops.FirstOrDefault(s => s.Name == existingShop.Name);
+
+            // If the current shop is null or has no items but the existing shop has items
+            if (currentShop == null ||
+                ((currentShop.Items == null || currentShop.Items.Count == 0) &&
+                 existingShop.Items != null && existingShop.Items.Count > 0))
+            {
+                // TODO: Handle case where shop is missing in current data
+                // or where shop has no items in current data but has items in existing records
+            }
+        }
+
+        // Find changes between shops and existing records
+        List<ShopChanges> changes = [];
+
+        foreach (var shop in _shops)
+        {
+            var existingShop = existingRecords.FirstOrDefault(s => s.Name == shop.Name);
+
+            // New shop
+            if (existingShop == null)
+            {
+                changes.Add(new ShopChanges
+                {
+                    Name = shop.Name,
+                    AddedItems = shop.Items ?? [],
+                    ChangedItems = [],
+                    RemovedItems = []
+                });
+                continue;
+            }
+
+            // Compare items for existing shops
+            var existingItems = existingShop.Items ?? [];
+            var currentItems = shop.Items ?? [];
+
+            var addedItems = currentItems.Where(item => !existingItems.Any(ei => ei.ItemName == item.ItemName)).ToList();
+            var removedItems = existingItems.Where(item => !currentItems.Any(ci => ci.ItemName == item.ItemName)).ToList();
+            var changedItems = currentItems.Where(newItem => existingItems.Any(oldItem => oldItem.ItemName == newItem.ItemName &&
+                                                                                          !oldItem.Equals(newItem)))
+                                           .Select(newItem => (oldState: existingItems.First(oldItem => oldItem.ItemName == newItem.ItemName),
+                                                               newState: newItem)).ToList();
+
+
+            if (addedItems.Count != 0 || removedItems.Count != 0 || changedItems.Count != 0)
+            {
+                changes.Add(new ShopChanges
+                {
+                    Name = shop.Name,
+                    AddedItems = addedItems,
+                    ChangedItems = changedItems,
+                    RemovedItems = removedItems
+                });
+            }
+        }
+
+        return changes;
     }
+
+    public async Task UpdateShopRecordsAsync()
+    {
+        if (_shops.Count == 0)
+            _shops = await GetShopsAsync();
+        else
+            await _cosmosDb.UpsertShopRecordsAsync(_shops);
+            
+    }
+
+    #region Private Methods
+    /// <summary>
+    /// Aggregates shop data from all registered Playwright services.
+    /// </summary>
+    /// <returns>A list of shops with their current inventory status.</returns>
+    private async Task<List<Shop>> GetShopsAsync()
+    {
+        return [.. (await Task.WhenAll(_playwrightServices.Select(service => service.GetShopStatusAsync())))];
+    }
+    #endregion
 }

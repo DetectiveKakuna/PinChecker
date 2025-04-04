@@ -12,6 +12,7 @@ public class ShopMappingProfile : Profile
             .ForMember(dest => dest.id, opt => opt.MapFrom(src => src.Name))
             .ForMember(dest => dest.app_type, opt => opt.MapFrom(src => Constants.CosmosShopPartition));
 
-        CreateMap<CosmosShop, Shop>();
+        CreateMap<CosmosShop, Shop>()
+            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.id));
     }
 }

@@ -40,17 +40,29 @@ services.AddScoped<IShopRepository, ShopRepository>();
 // Build Service Provider
 var serviceProvider = services.BuildServiceProvider();
 
-// Execute repository method
 using var scope = serviceProvider.CreateScope();
 
+Console.WriteLine("Starting");
 try
 {
     var shopRepository = scope.ServiceProvider.GetRequiredService<IShopRepository>();
-    Console.WriteLine("Running IShopRepository.Test()...");
-    await shopRepository.GetShopChanges();
-    Console.WriteLine("Test completed successfully!");
+    
+    var shopChanges = await shopRepository.GetShopChangesAsync();
+
+    if (!shopChanges.Any())
+        Console.WriteLine("No changes detected in any shop.");
+    else
+    {
+
+        // Log the changes once the email has been successfully sent
+        await shopRepository.UpdateShopRecordsAsync();
+    }
 }
 catch (Exception ex)
 {
     Console.WriteLine($"Error: {ex.Message}");
+}
+finally
+{
+    Console.WriteLine("Fin");
 }

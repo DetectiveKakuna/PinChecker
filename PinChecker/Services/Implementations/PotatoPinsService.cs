@@ -64,7 +64,7 @@ public class PotatoPinsService(IOptions<PlaywrightServiceConfig> config) : BaseP
             if (statusNode != null)
                 item.Status = statusNode.InnerText.Trim();
             else
-                item.Status = "No Status Given";
+                item.Status = "Available";
 
             shop.Items.Add(item);
         }

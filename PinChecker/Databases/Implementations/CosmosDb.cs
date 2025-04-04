@@ -1,4 +1,6 @@
-﻿using AutoMapper;
+﻿// Ignore Spelling: Upsert
+
+using AutoMapper;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
 using PinChecker.Models;

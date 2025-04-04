@@ -19,4 +19,28 @@ public class ShopItem
     /// The current availability status of the item.
     /// </summary>
     public string Status { get; set; }
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current shop item.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current shop item.</param>
+    /// <returns>true if the specified object is equal to the current shop item; otherwise, false.</returns>
+    public override bool Equals(object obj)
+    {
+        if (obj is not ShopItem other)
+            return false;
+
+        return ItemName == other.ItemName &&
+                           Math.Abs(Cost - other.Cost) < 0.001 &&
+                           Status == other.Status;
+    }
+
+    /// <summary>
+    /// Serves as the default hash function for the shop item.
+    /// </summary>
+    /// <returns>A hash code for the current shop item.</returns>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(ItemName, Cost, Status);
+    }
 }
