@@ -3,6 +3,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.Playwright;
 using PinChecker.Models;
 using PinChecker.Models.Configurations;
+using PinChecker.Models.Enums;
+using PinChecker.Models.Extensions;
 using System.Text.RegularExpressions;
 
 namespace PinChecker.Services.Implementations;
@@ -62,9 +64,14 @@ public class PotatoPinsService(IOptions<PlaywrightServiceConfig> config) : BaseP
             // Extract status
             var statusNode = node.SelectSingleNode(".//div[@class='product-list-thumb-status']");
             if (statusNode != null)
-                item.Status = statusNode.InnerText.Trim();
+                item.Status = statusNode.InnerText.ToShopStatus();
             else
-                item.Status = "Available";
+                item.Status = ShopStatus.Available;
+
+            // Extract the href attribute from the anchor tag
+            var anchorNode = node.ParentNode;
+            if (anchorNode != null && anchorNode.Attributes["href"] != null)
+                item.Link = $"{_config.Url.TrimEnd('/')}{anchorNode.Attributes["href"].Value}";
 
             shop.Items.Add(item);
         }

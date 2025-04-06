@@ -13,7 +13,7 @@ public abstract class BasePlaywrightService(IOptions<PlaywrightServiceConfig> co
     private IPlaywright _playwright;
     private IBrowser _browser;
     protected IPage _page;
-    private readonly PlaywrightServiceConfig _config = config.Value;
+    protected readonly PlaywrightServiceConfig _config = config.Value;
 
     public async Task<Shop> GetShopStatusAsync()
     {

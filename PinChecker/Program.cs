@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PinChecker.Databases;
 using PinChecker.Databases.Implementations;
@@ -21,12 +22,20 @@ var configuration = configurationBuilder.Build();
 // Configure services
 var services = new ServiceCollection();
 
+// Add logging
+services.AddLogging(builder =>
+{
+    builder.AddConfiguration(configuration.GetSection("Logging"));
+    builder.AddConsole();
+});
+
 // Register AutoMapper
 services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
 // Register Configs
-services.Configure<PlaywrightServiceConfig>(Constants.ConfigPotatoPins, configuration.GetSection(Constants.ConfigPotatoPins));
 services.Configure<CosmosDbConfig>(configuration.GetSection("CosmosDb"));
+services.Configure<EmailConfig>(configuration.GetSection("Email"));
+services.Configure<PlaywrightServiceConfig>(Constants.ConfigPotatoPins, configuration.GetSection(Constants.ConfigPotatoPins));
 
 // Register Cosmos DB service
 services.AddScoped<ICosmosDb, CosmosDb>();
@@ -47,9 +56,9 @@ try
 {
     var shopRepository = scope.ServiceProvider.GetRequiredService<IShopRepository>();
     
-    var shopChanges = await shopRepository.GetShopChangesAsync();
+    List<ShopChanges> shopChanges = [.. (await shopRepository.GetShopChangesAsync())];
 
-    if (!shopChanges.Any())
+    if (shopChanges.Count == 0)
         Console.WriteLine("No changes detected in any shop.");
     else
     {

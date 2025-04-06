@@ -22,21 +22,6 @@ public class ShopRepository(ICosmosDb cosmosDb, IEnumerable<IPlaywrightService> 
         _shops = await GetShopsAsync();
         List<Shop> existingRecords = [.. (await _cosmosDb.GetShopRecordsAsync())];
 
-        // Check for missing or empty shops compared to existing records
-        foreach (var existingShop in existingRecords)
-        {
-            var currentShop = _shops.FirstOrDefault(s => s.Name == existingShop.Name);
-
-            // If the current shop is null or has no items but the existing shop has items
-            if (currentShop == null ||
-                ((currentShop.Items == null || currentShop.Items.Count == 0) &&
-                 existingShop.Items != null && existingShop.Items.Count > 0))
-            {
-                // TODO: Handle case where shop is missing in current data
-                // or where shop has no items in current data but has items in existing records
-            }
-        }
-
         // Find changes between shops and existing records
         List<ShopChanges> changes = [];
 
@@ -63,13 +48,17 @@ public class ShopRepository(ICosmosDb cosmosDb, IEnumerable<IPlaywrightService> 
 
             var addedItems = currentItems.Where(item => !existingItems.Any(ei => ei.ItemName == item.ItemName)).ToList();
             var removedItems = existingItems.Where(item => !currentItems.Any(ci => ci.ItemName == item.ItemName)).ToList();
-            var changedItems = currentItems.Where(newItem => existingItems.Any(oldItem => oldItem.ItemName == newItem.ItemName &&
-                                                                                          !oldItem.Equals(newItem)))
-                                           .Select(newItem => (oldState: existingItems.First(oldItem => oldItem.ItemName == newItem.ItemName),
-                                                               newState: newItem)).ToList();
 
+            var changedItems = currentItems
+                .Where(newItem => existingItems.Any(oldItem =>
+                    oldItem.ItemName == newItem.ItemName &&
+                    oldItem.Status != newItem.Status))
+                .Select(newItem => (
+                    oldState: existingItems.First(oldItem => oldItem.ItemName == newItem.ItemName),
+                    newState: newItem))
+                .ToList();
 
-            if (addedItems.Count != 0 || removedItems.Count != 0 || changedItems.Count != 0)
+            if (addedItems.Count > 0 || removedItems.Count > 0 || changedItems.Count > 0)
             {
                 changes.Add(new ShopChanges
                 {
