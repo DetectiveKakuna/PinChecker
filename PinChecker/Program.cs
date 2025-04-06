@@ -1,55 +1,77 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using PinChecker.Databases;
+using PinChecker.Databases.Implementations;
+using PinChecker.Models;
 using PinChecker.Models.Configurations;
 using PinChecker.Repositories;
 using PinChecker.Repositories.Implementations;
 using PinChecker.Services;
 using PinChecker.Services.Implementations;
+using System.Reflection;
 
-// Set up configuration
-var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
-Console.WriteLine($"Environment: {environment}");
 
 var configurationBuilder = new ConfigurationBuilder()
-    .SetBasePath(Directory.GetCurrentDirectory())
+    .SetBasePath(AppContext.BaseDirectory)
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-
-// Override with local settings if in local environment
-if (environment.Equals("local", StringComparison.OrdinalIgnoreCase))
-{
-    configurationBuilder.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
-}
 
 var configuration = configurationBuilder.Build();
 
 // Configure services
 var services = new ServiceCollection();
 
-// Register configuration sections
-services.Configure<PlaywrightServiceConfig>(configuration.GetSection("FantasyPinGarden"));
-services.Configure<PlaywrightServiceConfig>(configuration.GetSection("PinsPotato"));
+// Add logging
+services.AddLogging(builder =>
+{
+    builder.AddConfiguration(configuration.GetSection("Logging"));
+    builder.AddConsole();
+});
 
-// Register services
-services.AddTransient<IPlaywrightService, FantasyPinGardenService>();
-services.AddTransient<IPlaywrightService, PinsPotatoService>();
+// Register AutoMapper
+services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
-// Register repositories
-services.AddTransient<IShopRepository, ShopRepository>();
+// Register Configs
+services.Configure<CosmosDbConfig>(configuration.GetSection("CosmosDb"));
+services.Configure<EmailConfig>(configuration.GetSection("Email"));
+services.Configure<PlaywrightServiceConfig>(Constants.ConfigPotatoPins, configuration.GetSection(Constants.ConfigPotatoPins));
 
-// Build service provider
+// Register Cosmos DB service
+services.AddScoped<ICosmosDb, CosmosDb>();
+
+// Register Services
+services.AddScoped<IPlaywrightService>(sp => new PotatoPinsService(Options.Create(sp.GetRequiredService<IOptionsMonitor<PlaywrightServiceConfig>>().Get(Constants.ConfigPotatoPins))));
+
+// Register Repositories
+services.AddScoped<IShopRepository, ShopRepository>();
+
+// Build Service Provider
 var serviceProvider = services.BuildServiceProvider();
 
-// Execute repository method
 using var scope = serviceProvider.CreateScope();
 
+Console.WriteLine("Starting");
 try
 {
     var shopRepository = scope.ServiceProvider.GetRequiredService<IShopRepository>();
-    Console.WriteLine("Running IShopRepository.Test()...");
-    await shopRepository.Test();
-    Console.WriteLine("Test completed successfully!");
+    
+    List<ShopChanges> shopChanges = [.. (await shopRepository.GetShopChangesAsync())];
+
+    if (shopChanges.Count == 0)
+        Console.WriteLine("No changes detected in any shop.");
+    else
+    {
+
+        // Log the changes once the email has been successfully sent
+        await shopRepository.UpdateShopRecordsAsync();
+    }
 }
 catch (Exception ex)
 {
     Console.WriteLine($"Error: {ex.Message}");
+}
+finally
+{
+    Console.WriteLine("Fin");
 }
