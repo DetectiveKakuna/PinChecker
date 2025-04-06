@@ -44,6 +44,7 @@ services.AddScoped<ICosmosDb, CosmosDb>();
 services.AddScoped<IPlaywrightService>(sp => new PotatoPinsService(Options.Create(sp.GetRequiredService<IOptionsMonitor<PlaywrightServiceConfig>>().Get(Constants.ConfigPotatoPins))));
 
 // Register Repositories
+services.AddScoped<IEmailRepository, EmailRepository>();
 services.AddScoped<IShopRepository, ShopRepository>();
 
 // Build Service Provider
@@ -54,6 +55,7 @@ using var scope = serviceProvider.CreateScope();
 Console.WriteLine("Starting");
 try
 {
+    var emailRepository = scope.ServiceProvider.GetRequiredService<IEmailRepository>();
     var shopRepository = scope.ServiceProvider.GetRequiredService<IShopRepository>();
     
     List<ShopChanges> shopChanges = [.. (await shopRepository.GetShopChangesAsync())];
@@ -62,9 +64,12 @@ try
         Console.WriteLine("No changes detected in any shop.");
     else
     {
+        // Send email with the changes
+        emailRepository.SendShopChangesEmail(shopChanges);
+        Console.WriteLine($"Email sent with changes from {shopChanges.Count} shop(s).");
 
         // Log the changes once the email has been successfully sent
-        await shopRepository.UpdateShopRecordsAsync();
+        //await shopRepository.UpdateShopRecordsAsync();
     }
 }
 catch (Exception ex)
