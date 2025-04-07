@@ -65,7 +65,7 @@ try
     else
     {
         // Send email with the changes
-        emailRepository.SendShopChangesEmail(shopChanges);
+        var response = await emailRepository.SendUpdateEmailAsync(shopChanges);
         Console.WriteLine($"Email sent with changes from {shopChanges.Count} shop(s).");
 
         // Log the changes once the email has been successfully sent

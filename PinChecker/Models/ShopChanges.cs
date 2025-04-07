@@ -8,7 +8,7 @@ public class ShopChanges
     /// <summary>
     /// The name identifier of the shop.
     /// </summary>
-    public string Name { get; set; }
+    public string ShopName { get; set; }
 
     /// <summary>
     /// Collection of new items added to the shop's inventory.

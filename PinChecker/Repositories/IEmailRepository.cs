@@ -4,5 +4,5 @@ namespace PinChecker.Repositories;
 
 public interface IEmailRepository
 {
-    void SendShopChangesEmail(List<ShopChanges> changes);
+    Task<bool> SendUpdateEmailAsync(List<ShopChanges> shopChangesList);
 }

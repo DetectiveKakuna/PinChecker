@@ -41,7 +41,7 @@ public static class ValidationEx
             return false;
 
         // Check if name is valid
-        if (string.IsNullOrWhiteSpace(changes.Name))
+        if (string.IsNullOrWhiteSpace(changes.ShopName))
             return false;
 
         // Check if at least one list has count > 1
@@ -80,7 +80,7 @@ public static class ValidationEx
         if (item == null)
             return false;
 
-        return !string.IsNullOrWhiteSpace(item.ItemName) &&
+        return !string.IsNullOrWhiteSpace(item.Name) &&
                !string.IsNullOrWhiteSpace(item.Link) &&
                item.Status != Enums.ShopStatus.Unknown &&
                item.Cost > 0;
