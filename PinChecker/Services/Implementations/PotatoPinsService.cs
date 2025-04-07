@@ -41,9 +41,9 @@ public class PotatoPinsService(IOptions<PlaywrightServiceConfig> config) : BaseP
             // Extract name
             var nameNode = node.SelectSingleNode(".//div[@class='product-list-thumb-name']");
             if (nameNode != null)
-                item.ItemName = nameNode.InnerText.Trim();
+                item.Name = nameNode.InnerText.Trim();
             else
-                item.ItemName = "No Name Given";
+                item.Name = "No Name Given";
 
             // Extract price - find the highest price if range is provided
             var priceNode = node.SelectSingleNode(".//div[@class='product-list-thumb-price']");

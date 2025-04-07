@@ -34,7 +34,7 @@ public class ShopRepository(ICosmosDb cosmosDb, IEnumerable<IPlaywrightService> 
             {
                 changes.Add(new ShopChanges
                 {
-                    Name = shop.Name,
+                    ShopName = shop.Name,
                     AddedItems = shop.Items ?? [],
                     ChangedItems = [],
                     RemovedItems = []
@@ -46,15 +46,15 @@ public class ShopRepository(ICosmosDb cosmosDb, IEnumerable<IPlaywrightService> 
             var existingItems = existingShop.Items ?? [];
             var currentItems = shop.Items ?? [];
 
-            var addedItems = currentItems.Where(item => !existingItems.Any(ei => ei.ItemName == item.ItemName)).ToList();
-            var removedItems = existingItems.Where(item => !currentItems.Any(ci => ci.ItemName == item.ItemName)).ToList();
+            var addedItems = currentItems.Where(item => !existingItems.Any(ei => ei.Name == item.Name)).ToList();
+            var removedItems = existingItems.Where(item => !currentItems.Any(ci => ci.Name == item.Name)).ToList();
 
             var changedItems = currentItems
                 .Where(newItem => existingItems.Any(oldItem =>
-                    oldItem.ItemName == newItem.ItemName &&
+                    oldItem.Name == newItem.Name &&
                     oldItem.Status != newItem.Status))
                 .Select(newItem => (
-                    oldState: existingItems.First(oldItem => oldItem.ItemName == newItem.ItemName),
+                    oldState: existingItems.First(oldItem => oldItem.Name == newItem.Name),
                     newState: newItem))
                 .ToList();
 
@@ -62,7 +62,7 @@ public class ShopRepository(ICosmosDb cosmosDb, IEnumerable<IPlaywrightService> 
             {
                 changes.Add(new ShopChanges
                 {
-                    Name = shop.Name,
+                    ShopName = shop.Name,
                     AddedItems = addedItems,
                     ChangedItems = changedItems,
                     RemovedItems = removedItems

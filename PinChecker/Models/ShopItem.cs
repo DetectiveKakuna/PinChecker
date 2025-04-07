@@ -10,7 +10,7 @@ public record ShopItem
     /// <summary>
     /// The name identifier of the item.
     /// </summary>
-    public string ItemName { get; set; }
+    public string Name { get; set; }
 
     /// <summary>
     /// The price of the item.
