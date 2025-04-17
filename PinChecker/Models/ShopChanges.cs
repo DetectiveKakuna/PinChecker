@@ -16,12 +16,7 @@ public class ShopChanges
     public List<ShopItem> AddedItems { get; set; }
 
     /// <summary>
-    /// Collection of existing items that have been modified in the shop's inventory.
+    /// Collection of existing items that have a new status in the shop's inventory.
     /// </summary>
-    public List<(ShopItem oldState, ShopItem newState)> ChangedItems { get; set; }
-
-    /// <summary>
-    /// Collection of items removed from the shop's inventory.
-    /// </summary>
-    public List<ShopItem> RemovedItems { get; set; }
+    public List<(ShopItem oldState, ShopItem newState)> ChangedStatus { get; set; }
 }
