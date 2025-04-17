@@ -36,8 +36,7 @@ public class ShopRepository(ICosmosDb cosmosDb, IEnumerable<IPlaywrightService> 
                 {
                     ShopName = shop.Name,
                     AddedItems = shop.Items ?? [],
-                    ChangedItems = [],
-                    RemovedItems = []
+                    ChangedStatus = [],
                 });
                 continue;
             }
@@ -47,25 +46,21 @@ public class ShopRepository(ICosmosDb cosmosDb, IEnumerable<IPlaywrightService> 
             var currentItems = shop.Items ?? [];
 
             var addedItems = currentItems.Where(item => !existingItems.Any(ei => ei.Name == item.Name)).ToList();
-            var removedItems = existingItems.Where(item => !currentItems.Any(ci => ci.Name == item.Name)).ToList();
 
-            var changedItems = currentItems
-                .Where(newItem => existingItems.Any(oldItem =>
-                    oldItem.Name == newItem.Name &&
-                    oldItem.Status != newItem.Status))
+            var changedStatus = currentItems
+                .Where(newItem => existingItems.Any(oldItem => oldItem.Status != newItem.Status))
                 .Select(newItem => (
                     oldState: existingItems.First(oldItem => oldItem.Name == newItem.Name),
                     newState: newItem))
                 .ToList();
 
-            if (addedItems.Count > 0 || removedItems.Count > 0 || changedItems.Count > 0)
+            if (addedItems.Count > 0 || changedStatus.Count > 0)
             {
                 changes.Add(new ShopChanges
                 {
                     ShopName = shop.Name,
                     AddedItems = addedItems,
-                    ChangedItems = changedItems,
-                    RemovedItems = removedItems
+                    ChangedStatus = changedStatus,
                 });
             }
         }
