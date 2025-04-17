@@ -48,10 +48,8 @@ public class ShopRepository(ICosmosDb cosmosDb, IEnumerable<IPlaywrightService> 
             var addedItems = currentItems.Where(item => !existingItems.Any(ei => ei.Name == item.Name)).ToList();
 
             var changedStatus = currentItems
-                .Where(newItem => existingItems.Any(oldItem => oldItem.Status != newItem.Status))
-                .Select(newItem => (
-                    oldState: existingItems.First(oldItem => oldItem.Name == newItem.Name),
-                    newState: newItem))
+                .Where(newItem => existingItems.Any(oldItem => oldItem.Name == newItem.Name && oldItem.Status != newItem.Status))
+                .Select(newItem => (oldState: existingItems.First(oldItem => oldItem.Name == newItem.Name), newState: newItem))
                 .ToList();
 
             if (addedItems.Count > 0 || changedStatus.Count > 0)
