@@ -8,6 +8,10 @@
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
         <PreserveCompilationContext>true</PreserveCompilationContext>
+
+        <Version>1.1.0</Version>
+        <AssemblyVersion>1.1.0.0</AssemblyVersion>
+        <FileVersion>1.1.0.0</FileVersion>
     </PropertyGroup>
 
     <ItemGroup>
