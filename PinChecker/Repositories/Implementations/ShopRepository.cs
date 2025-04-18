@@ -27,10 +27,10 @@ public class ShopRepository(ICosmosDb cosmosDb, IEnumerable<IPlaywrightService> 
 
         foreach (var shop in _shops)
         {
-            var existingShop = existingRecords.FirstOrDefault(s => s.Name == shop.Name);
+            var currentShopRecord = existingRecords.FirstOrDefault(s => s.Name == shop.Name);
 
             // New shop
-            if (existingShop == null)
+            if (currentShopRecord == null)
             {
                 changes.Add(new ShopChanges
                 {
@@ -42,16 +42,14 @@ public class ShopRepository(ICosmosDb cosmosDb, IEnumerable<IPlaywrightService> 
             }
 
             // Compare items for existing shops
-            var existingItems = existingShop.Items ?? [];
-            var currentItems = shop.Items ?? [];
+            var oldShopState = currentShopRecord.Items ?? [];
+            var newShopState = shop.Items ?? [];
 
-            var addedItems = currentItems.Where(item => !existingItems.Any(ei => ei.Name == item.Name)).ToList();
+            var addedItems = newShopState.Where(item => !oldShopState.Any(ei => ei.Name == item.Name)).ToList();
 
-            var changedStatus = currentItems
-                .Where(newItem => existingItems.Any(oldItem => oldItem.Status != newItem.Status))
-                .Select(newItem => (
-                    oldState: existingItems.First(oldItem => oldItem.Name == newItem.Name),
-                    newState: newItem))
+            var changedStatus = newShopState
+                .Where(newState => newState.Status != Models.Enums.ShopStatus.SoldOut && oldShopState.Any(oldState => oldState.Name == newState.Name && oldState.Status != newState.Status))
+                .Select(newState => (oldState: oldShopState.First(oldState => oldState.Name == newState.Name), newState: newState))
                 .ToList();
 
             if (addedItems.Count > 0 || changedStatus.Count > 0)

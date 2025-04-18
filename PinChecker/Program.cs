@@ -49,28 +49,26 @@ services.AddScoped<IShopRepository, ShopRepository>();
 
 // Build Service Provider
 var serviceProvider = services.BuildServiceProvider();
-
 using var scope = serviceProvider.CreateScope();
 
-Console.WriteLine("Starting");
+// Resolve services
+var emailRepository = scope.ServiceProvider.GetRequiredService<IEmailRepository>();
+var shopRepository = scope.ServiceProvider.GetRequiredService<IShopRepository>();
+
 try
 {
-    var emailRepository = scope.ServiceProvider.GetRequiredService<IEmailRepository>();
-    var shopRepository = scope.ServiceProvider.GetRequiredService<IShopRepository>();
-    
     List<ShopChanges> shopChanges = [.. (await shopRepository.GetShopChangesAsync())];
 
-    if (shopChanges.Count == 0)
-        Console.WriteLine("No changes detected in any shop.");
-    else
+    if (shopChanges.Count > 0)
     {
         // Send email with the changes
         var response = await emailRepository.SendUpdateEmailAsync(shopChanges);
-        Console.WriteLine($"Email sent with changes from {shopChanges.Count} shop(s).");
-
-        // Log the changes once the email has been successfully sent
-        //await shopRepository.UpdateShopRecordsAsync();
+        Console.WriteLine($"Email sent: ({shopChanges.SelectMany(s => s.AddedItems).Count()}) items added." +
+            $" ({shopChanges.SelectMany(s => s.ChangedStatus).Count()}) statuses changed.");
     }
+
+    // Log the changes
+    await shopRepository.UpdateShopRecordsAsync();
 }
 catch (Exception ex)
 {
@@ -78,5 +76,10 @@ catch (Exception ex)
 }
 finally
 {
-    Console.WriteLine("Fin");
+    // Dispose of the service provider
+    if (serviceProvider is IDisposable disposable)
+    {
+        disposable.Dispose();
+    }
+    Console.WriteLine($"Successful Execution");
 }
