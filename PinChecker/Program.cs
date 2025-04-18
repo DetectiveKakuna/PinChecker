@@ -69,7 +69,7 @@ try
         Console.WriteLine($"Email sent with changes from {shopChanges.Count} shop(s).");
 
         // Log the changes once the email has been successfully sent
-        //await shopRepository.UpdateShopRecordsAsync();
+        await shopRepository.UpdateShopRecordsAsync();
     }
 }
 catch (Exception ex)
