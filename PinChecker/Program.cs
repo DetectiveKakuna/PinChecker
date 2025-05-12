@@ -2,8 +2,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using PinChecker.Databases;
-using PinChecker.Databases.Implementations;
 using PinChecker.Models;
 using PinChecker.Models.Configurations;
 using PinChecker.Repositories;
@@ -33,14 +31,12 @@ services.AddLogging(builder =>
 services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
 // Register Configs
-services.Configure<CosmosDbConfig>(configuration.GetSection("CosmosDb"));
 services.Configure<EmailConfig>(configuration.GetSection("Email"));
+services.Configure<JsonSaveFileConfig>(configuration.GetSection("JsonSaveFile"));
 services.Configure<PlaywrightServiceConfig>(Constants.ConfigPotatoPins, configuration.GetSection(Constants.ConfigPotatoPins));
 
-// Register Cosmos DB service
-services.AddScoped<ICosmosDb, CosmosDb>();
-
 // Register Services
+services.AddScoped<IJsonFileService, JsonFileService>();
 services.AddScoped<IPlaywrightService>(sp => new PotatoPinsService(Options.Create(sp.GetRequiredService<IOptionsMonitor<PlaywrightServiceConfig>>().Get(Constants.ConfigPotatoPins))));
 
 // Register Repositories
@@ -64,11 +60,13 @@ try
         // Send email with the changes
         var response = await emailRepository.SendUpdateEmailAsync(shopChanges);
         Console.WriteLine($"Email sent: ({shopChanges.SelectMany(s => s.AddedItems).Count()}) items added." +
-            $" ({shopChanges.SelectMany(s => s.ChangedStatus).Count()}) statuses changed.");
+            $" ({shopChanges.SelectMany(s => s.ChangedItems).Count()}) statuses changed.");
     }
 
-    // Log the changes
+    // Log shop updates to capture changes not tracked for the email
     await shopRepository.UpdateShopRecordsAsync();
+
+    Console.WriteLine($"Successful Execution");
 }
 catch (Exception ex)
 {
@@ -81,5 +79,4 @@ finally
     {
         disposable.Dispose();
     }
-    Console.WriteLine($"Successful Execution");
 }

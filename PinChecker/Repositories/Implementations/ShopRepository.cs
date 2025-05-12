@@ -1,26 +1,47 @@
 ﻿// Ignore Spelling: Upsert
 
-using PinChecker.Databases;
 using PinChecker.Models;
 using PinChecker.Services;
-using static System.Formats.Asn1.AsnWriter;
 
 namespace PinChecker.Repositories.Implementations;
 
 /// <summary>
 /// Implementation of the shop repository that manages shops.
 /// </summary>
-public class ShopRepository(ICosmosDb cosmosDb, IEnumerable<IPlaywrightService> playwrightServices) : IShopRepository
+public class ShopRepository(IJsonFileService jsonFileService, IEnumerable<IPlaywrightService> playwrightServices) : IShopRepository
 {
-    private readonly ICosmosDb _cosmosDb = cosmosDb;
+    private readonly IJsonFileService _jsonFileService = jsonFileService;
     private readonly List<IPlaywrightService> _playwrightServices = [.. playwrightServices];
     
     private List<Shop> _shops = [];
 
     public async Task<IEnumerable<ShopChanges>> GetShopChangesAsync()
     {
-        _shops = await GetShopsAsync();
-        List<Shop> existingRecords = [.. (await _cosmosDb.GetShopRecordsAsync())];
+        try
+        {
+            _shops = await GetShopsAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching shop data: {ex.Message}");
+            return [];
+        }
+
+        List<Shop> existingRecords = [];
+
+        try
+        {
+            existingRecords = [.. (await _jsonFileService.GetShopRecordsAsync())];
+
+            // If the file happens to be new, don't return changes for the email
+            if (existingRecords.Count == 0)
+                return [];
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching existing shop records: {ex.Message}");
+            return [];
+        }
 
         // Find changes between shops and existing records
         List<ShopChanges> changes = [];
@@ -36,7 +57,7 @@ public class ShopRepository(ICosmosDb cosmosDb, IEnumerable<IPlaywrightService> 
                 {
                     ShopName = shop.Name,
                     AddedItems = shop.Items ?? [],
-                    ChangedStatus = [],
+                    ChangedItems = [],
                 });
                 continue;
             }
@@ -47,18 +68,20 @@ public class ShopRepository(ICosmosDb cosmosDb, IEnumerable<IPlaywrightService> 
 
             var addedItems = newShopState.Where(item => !oldShopState.Any(ei => ei.Name == item.Name)).ToList();
 
-            var changedStatus = newShopState
+            // Changes currently checking for:
+            // 1. Status changes other than an item selling out
+            var changedItems = newShopState
                 .Where(newState => newState.Status != Models.Enums.ShopStatus.SoldOut && oldShopState.Any(oldState => oldState.Name == newState.Name && oldState.Status != newState.Status))
-                .Select(newState => (oldState: oldShopState.First(oldState => oldState.Name == newState.Name), newState: newState))
+                .Select(newState => (oldState: oldShopState.First(oldState => oldState.Name == newState.Name), newState))
                 .ToList();
 
-            if (addedItems.Count > 0 || changedStatus.Count > 0)
+            if (addedItems.Count > 0 || changedItems.Count > 0)
             {
                 changes.Add(new ShopChanges
                 {
                     ShopName = shop.Name,
                     AddedItems = addedItems,
-                    ChangedStatus = changedStatus,
+                    ChangedItems = changedItems,
                 });
             }
         }
@@ -68,11 +91,8 @@ public class ShopRepository(ICosmosDb cosmosDb, IEnumerable<IPlaywrightService> 
 
     public async Task UpdateShopRecordsAsync()
     {
-        if (_shops.Count == 0)
-            _shops = await GetShopsAsync();
-        else
-            await _cosmosDb.UpsertShopRecordsAsync(_shops);
-            
+        if (_shops.Count != 0 && _shops.All(shop => shop.Items.Count > 0))
+            await _jsonFileService.SetShopRecordsAsync(_shops);
     }
 
     #region Private Methods

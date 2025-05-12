@@ -15,10 +15,6 @@ public static class ValidationEx
         if (shop == null)
             return false;
 
-        // Check if name is valid
-        if (string.IsNullOrWhiteSpace(shop.Name))
-            return false;
-
         // Check if items exists and has more than 1 item
         if (shop.Items == null || shop.Items.Count <= 1)
             return false;
@@ -40,13 +36,9 @@ public static class ValidationEx
         if (changes == null)
             return false;
 
-        // Check if name is valid
-        if (string.IsNullOrWhiteSpace(changes.ShopName))
-            return false;
-
         // Check if at least one list has count > 1
         bool hasItems = (changes.AddedItems?.Count > 1) ||
-                        (changes.ChangedStatus?.Count > 1);
+                        (changes.ChangedItems?.Count > 1);
 
         if (!hasItems)
             return false;
@@ -56,8 +48,8 @@ public static class ValidationEx
             return false;
 
         // Validate all items in ChangedItems
-        if (changes.ChangedStatus != null &&
-            changes.ChangedStatus.Any(tuple =>
+        if (changes.ChangedItems != null &&
+            changes.ChangedItems.Any(tuple =>
                 (tuple.oldState != null && !tuple.oldState.IsValid()) ||
                 (tuple.newState != null && !tuple.newState.IsValid())))
             return false;

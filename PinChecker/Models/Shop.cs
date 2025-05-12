@@ -1,4 +1,6 @@
-﻿namespace PinChecker.Models;
+﻿using PinChecker.Models.Enums;
+
+namespace PinChecker.Models;
 
 /// <summary>
 /// Represents a shop entity with its inventory of items.
@@ -8,7 +10,7 @@ public record Shop
     /// <summary>
     /// The name identifier of the shop.
     /// </summary>
-    public string Name { get; set; }
+    public ShopName Name { get; set; }
 
     /// <summary>
     /// Collection of items available in the shop.

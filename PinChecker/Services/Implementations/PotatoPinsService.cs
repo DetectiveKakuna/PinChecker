@@ -22,7 +22,7 @@ public class PotatoPinsService(IOptions<PlaywrightServiceConfig> config) : BaseP
 
         var shop = new Shop
         {
-            Name = "Potato Pins",
+            Name = ShopName.PotatoPins,
             Items = [],
         };
         var htmlDoc = new HtmlDocument();
