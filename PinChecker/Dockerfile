@@ -2,6 +2,10 @@ FROM mcr.microsoft.com/playwright/dotnet:v1.51.0-noble
 
 WORKDIR /app
 
+# Create volume directory for persistent data
+RUN mkdir -p /app/data
+VOLUME ["/app/data"]
+
 # Copy everything from the current directory
 COPY . .
 

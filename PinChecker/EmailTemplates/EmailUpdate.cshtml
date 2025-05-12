@@ -128,7 +128,7 @@
                         </div>
                     }
                     <!-- Changed Items Section -->
-                    @if (shopChange.ChangedStatus != null && shopChange.ChangedStatus.Any())
+                    @if (shopChange.ChangedItems != null && shopChange.ChangedItems.Any())
                     {
                         <div class="shop-section" style="margin-bottom: 20px; background-color: @backgroundColor; border: 1px solid @borderColor; border-radius: 5px; overflow: hidden;">
                             <div class="section-header" style="background-color: @sectionBgColor; padding: 10px; color: @headerTextColor; font-weight: bold; text-align: center;">
@@ -136,7 +136,7 @@
                             </div>
                             <div style="padding: 10px;">
                                 <table style="width: 100%; border-collapse: collapse;">
-                                    @foreach (var change in shopChange.ChangedStatus)
+                                    @foreach (var change in shopChange.ChangedItems)
                                     {
                                         <tr>
                                             <td style="padding: 10px;">

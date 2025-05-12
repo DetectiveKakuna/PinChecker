@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /PinChecker/appsettings.local.json
 /PinChecker/appsettings.json
+/PinChecker/Properties/launchSettings.json
