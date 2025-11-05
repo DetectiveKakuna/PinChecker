@@ -1,0 +1,132 @@
+@model PinChecker.Models.EmailErrorModel
+@{
+    string borderColor = "#dc3545";
+    string backgroundColor = "#ffffff";
+    string textColor = "#333333";
+    string headerBgColor = "#f8d7da";
+    string headerTextColor = "#721c24";
+    string sectionBgColor = "#f6f6f6";
+    string linkColor = "#0366d6";
+    string errorColor = "#dc3545";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@Model.EmailTitle</title>
+    <meta name="color-scheme" content="light dark">
+    <meta name="supported-color-schemes" content="light dark">
+    <style>
+        /* Base styles with fallbacks */
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333333;
+            background-color: #ffffff;
+        }
+
+        /* Dark mode overrides */
+        @@media (prefers-color-scheme: dark) {
+            .email-body {
+                background-color: #121212 !important;
+            }
+
+            .email-container {
+                background-color: #1e1e1e !important;
+                border-color: #dc3545 !important;
+            }
+
+            .email-header {
+                background-color: #5c1e1e !important;
+            }
+
+                .email-header h1, .email-header h2 {
+                    color: #ff6b6b !important;
+                }
+
+            .error-section {
+                background-color: #2d1b1b !important;
+                border-color: #dc3545 !important;
+            }
+
+            .error-details {
+                background-color: #1a1a1a !important;
+                border-color: #5e5e5e !important;
+            }
+
+            .code-block {
+                background-color: #0d1117 !important;
+                border-color: #30363d !important;
+            }
+
+            .error-text, .details-text {
+                color: #e0e0e0 !important;
+            }
+
+            .error-label {
+                color: #ff6b6b !important;
+            }
+
+            a {
+                color: #58a6ff !important;
+            }
+
+            .footer {
+                color: #a0a0a0 !important;
+            }
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: @textColor; background-color: #f0f0f0;">
+    <div class="email-body" style="background-color: #f0f0f0; padding: 20px;">
+        <div class="email-container" style="max-width: 800px; margin: 0 auto; background-color: @backgroundColor; border: 2px solid @borderColor; border-radius: 5px; overflow: hidden; box-shadow: 0 0 10px rgba(220, 53, 69, 0.3);">
+            <!-- Email Header -->
+            <div class="email-header" style="background-color: @headerBgColor; padding: 20px; text-align: center;">
+                <h1 style="margin: 0; color: @headerTextColor; font-size: 24px; margin-bottom: 10px;">⚠️ @Model.EmailTitle</h1>
+                <h2 style="margin: 0; color: @headerTextColor; font-size: 16px; font-weight: normal;">@Model.EmailSubtitle</h2>
+            </div>
+
+            <!-- Error Details -->
+            <div class="error-section" style="padding: 20px; background-color: @sectionBgColor; border-bottom: 1px solid @borderColor;">
+                <h3 style="margin: 0 0 15px 0; color: @errorColor; font-size: 18px;">Error Details</h3>
+                
+                <div class="error-details" style="background-color: #ffffff; border: 1px solid #dee2e6; border-radius: 5px; padding: 15px; margin-bottom: 15px;">
+                    <div style="margin-bottom: 10px;">
+                        <span class="error-label" style="font-weight: bold; color: @errorColor;">Shop:</span>
+                        <span class="details-text" style="color: @textColor;">@Model.ShopName</span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <span class="error-label" style="font-weight: bold; color: @errorColor;">Time:</span>
+                        <span class="details-text" style="color: @textColor;">@Model.ErrorTimestamp.ToString("yyyy-MM-dd HH:mm:ss") UTC</span>
+                    </div>
+                    <div>
+                        <span class="error-label" style="font-weight: bold; color: @errorColor;">Error Message:</span>
+                        <div class="error-text" style="color: @textColor; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 3px; padding: 10px; margin-top: 5px; font-family: 'Courier New', monospace; white-space: pre-wrap;">@Model.ErrorMessage</div>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.InnerExceptionDetails))
+                {
+                    <h4 style="margin: 20px 0 10px 0; color: @errorColor; font-size: 16px;">Inner Exception</h4>
+                    <div class="code-block" style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 3px; padding: 10px; margin-bottom: 15px; font-family: 'Courier New', monospace; font-size: 12px; white-space: pre-wrap; overflow-x: auto; max-height: 200px; overflow-y: auto;">@Model.InnerExceptionDetails</div>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.StackTrace))
+                {
+                    <h4 style="margin: 20px 0 10px 0; color: @errorColor; font-size: 16px;">Stack Trace</h4>
+                    <div class="code-block" style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 3px; padding: 10px; margin-bottom: 15px; font-family: 'Courier New', monospace; font-size: 12px; white-space: pre-wrap; overflow-x: auto; max-height: 200px; overflow-y: auto;">@Model.StackTrace</div>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.PageHtml))
+                {
+                    <h4 style="margin: 20px 0 10px 0; color: @errorColor; font-size: 16px;">Page HTML Content</h4>
+                    <div class="code-block" style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 3px; padding: 10px; font-family: 'Courier New', monospace; font-size: 11px; white-space: pre-wrap; overflow-x: auto; max-height: 300px; overflow-y: auto;">@Model.PageHtml</div>
+                }
+            </div>
+        </div>
+    </div>
+</body>
+</html>

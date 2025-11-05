@@ -1,0 +1,92 @@
+@model PinChecker.Models.EmailNotificationModel
+@{
+    string borderColor = "#5e5e5e";
+    string backgroundColor = "#ffffff";
+    string textColor = "#333333";
+    string headerBgColor = "#e8e8fd";
+    string headerTextColor = "#333333";
+    string sectionBgColor = "#f6f6f6";
+    string linkColor = "#0366d6";
+    string buttonColor = "#007bff";
+    string buttonTextColor = "#ffffff";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@Model.EmailTitle</title>
+    <meta name="color-scheme" content="light dark">
+    <meta name="supported-color-schemes" content="light dark">
+    <style>
+        /* Base styles with fallbacks */
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333333;
+            background-color: #ffffff;
+        }
+
+        /* Dark mode overrides */
+        @@media (prefers-color-scheme: dark) {
+            .email-body {
+                background-color: #121212 !important;
+            }
+
+            .email-container {
+                background-color: #1e1e1e !important;
+                border-color: #5e5e5e !important;
+            }
+
+            .email-header {
+                background-color: #282854 !important;
+            }
+
+                .email-header h1, .email-header h2 {
+                    color: #e0e0e0 !important;
+                }
+
+            .notification-content {
+                background-color: #2d2d2d !important;
+                color: #e0e0e0 !important;
+            }
+
+            .shop-button {
+                background-color: #0d6efd !important;
+            }
+
+            a {
+                color: #58a6ff !important;
+            }
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: @textColor; background-color: #f0f0f0;">
+    <div class="email-body" style="background-color: #f0f0f0; padding: 20px;">
+        <div class="email-container" style="max-width: 600px; margin: 0 auto; background-color: @backgroundColor; border: 1px solid @borderColor; border-radius: 5px; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+            <!-- Email Header -->
+            <div class="email-header" style="background-color: @headerBgColor; padding: 20px; text-align: center;">
+                <h1 style="margin: 0; color: @headerTextColor; font-size: 24px; margin-bottom: 10px;">⚠️ @Model.EmailTitle</h1>
+                <h2 style="margin: 0; color: @headerTextColor; font-size: 16px; font-weight: normal;">@Model.EmailSubtitle</h2>
+            </div>
+
+            <!-- Notification Content -->
+            <div class="notification-content" style="padding: 30px; text-align: center; background-color: @backgroundColor; color: @textColor;">
+                <p style="font-size: 18px; margin-bottom: 30px; line-height: 1.5;">
+                    Hey! The bot was unable to scrape <strong>@Model.ShopName</strong>. There may be something going on worth taking a look at.
+                </p>
+
+                <div style="margin: 30px 0;">
+                    <a href="@Model.ShopUrl" 
+                       class="shop-button"
+                       style="display: inline-block; background-color: @buttonColor; color: @buttonTextColor; text-decoration: none; padding: 15px 30px; border-radius: 5px; font-weight: bold; font-size: 16px; transition: background-color 0.3s;">
+                        @Model.ShopName
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

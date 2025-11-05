@@ -44,6 +44,12 @@
         <None Update="EmailTemplates\EmailUpdate.cshtml">
           <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+        <None Update="EmailTemplates\EmailError.cshtml">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="EmailTemplates\EmailNotification.cshtml">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
     <Target Name="CopyPlaywrightDrivers" AfterTargets="Publish">

@@ -18,6 +18,9 @@ public class EmailConfig
     public required List<string> RecipientEmails { get; set; }
     public required string Subject { get; set; }
 
+    // Error Email Settings
+    public required List<string> ErrorRecipientEmails { get; set; }
+
     // Email Appearance
     public required string EmailTitle { get; set; }
     public required string EmailSubtitle { get; set; }

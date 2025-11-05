@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PinChecker.Models;
 using PinChecker.Models.Configurations;
+using PinChecker.Models.Exceptions;
 using PinChecker.Repositories;
 using PinChecker.Repositories.Implementations;
 using PinChecker.Services;
@@ -37,6 +38,7 @@ services.Configure<PlaywrightServiceConfig>(Constants.ConfigPotatoPins, configur
 
 // Register Services
 services.AddScoped<IJsonFileService, JsonFileService>();
+services.AddScoped<IErrorDeduplicationService, ErrorDeduplicationService>();
 services.AddScoped<IPlaywrightService>(sp => new PotatoPinsService(Options.Create(sp.GetRequiredService<IOptionsMonitor<PlaywrightServiceConfig>>().Get(Constants.ConfigPotatoPins))));
 
 // Register Repositories
@@ -50,6 +52,8 @@ using var scope = serviceProvider.CreateScope();
 // Resolve services
 var emailRepository = scope.ServiceProvider.GetRequiredService<IEmailRepository>();
 var shopRepository = scope.ServiceProvider.GetRequiredService<IShopRepository>();
+var errorDeduplicationService = scope.ServiceProvider.GetRequiredService<IErrorDeduplicationService>();
+var shopConfig = scope.ServiceProvider.GetRequiredService<IOptionsMonitor<PlaywrightServiceConfig>>().Get(Constants.ConfigPotatoPins);
 
 try
 {
@@ -66,7 +70,53 @@ try
     // Log shop updates to capture changes not tracked for the email
     await shopRepository.UpdateShopRecordsAsync();
 
+    // Clear error history on successful execution
+    await errorDeduplicationService.ClearErrorHistoryAsync();
+
     Console.WriteLine($"Successful Execution");
+}
+catch (ShopScrapeException shopEx)
+{
+    Console.WriteLine($"Shop scraping error: {shopEx.Message}");
+    
+    // Check if this error is a duplicate
+    var isDuplicate = await errorDeduplicationService.IsErrorDuplicateAsync(shopEx.PageHtml);
+    
+    if (isDuplicate)
+    {
+        Console.WriteLine("Error is duplicate of previous error, skipping email notification.");
+    }
+    else
+    {
+        // Send error email with page HTML
+        try
+        {
+            var emailSent = await emailRepository.SendErrorEmailAsync(shopEx);
+            Console.WriteLine($"Error email sent: {emailSent}");
+            
+            // Record this error after successfully sending email
+            if (emailSent)
+            {
+                await errorDeduplicationService.RecordErrorAsync(shopEx.PageHtml);
+                Console.WriteLine("Error recorded for deduplication.");
+            }
+        }
+        catch (Exception emailEx)
+        {
+            Console.WriteLine($"Failed to send error email: {emailEx.Message}");
+        }
+
+        // Send notification email to regular users
+        try
+        {
+            var notificationSent = await emailRepository.SendNotificationEmailAsync(shopEx, shopConfig.Url);
+            Console.WriteLine($"Notification email sent: {notificationSent}");
+        }
+        catch (Exception notificationEx)
+        {
+            Console.WriteLine($"Failed to send notification email: {notificationEx.Message}");
+        }
+    }
 }
 catch (Exception ex)
 {

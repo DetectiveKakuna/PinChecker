@@ -19,12 +19,12 @@ public class ShopRepository(IJsonFileService jsonFileService, IEnumerable<IPlayw
     {
         try
         {
-            _shops = await GetShopsAsync();
+            _shops = [.. (await Task.WhenAll(_playwrightServices.Select(service => service.GetShopStatusAsync())))];
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error fetching shop data: {ex.Message}");
-            return [];
+            throw ;
         }
 
         List<Shop> existingRecords = [];
@@ -94,15 +94,4 @@ public class ShopRepository(IJsonFileService jsonFileService, IEnumerable<IPlayw
         if (_shops.Count != 0 && _shops.All(shop => shop.Items.Count > 0))
             await _jsonFileService.SetShopRecordsAsync(_shops);
     }
-
-    #region Private Methods
-    /// <summary>
-    /// Aggregates shop data from all registered Playwright services.
-    /// </summary>
-    /// <returns>A list of shops with their current inventory status.</returns>
-    private async Task<List<Shop>> GetShopsAsync()
-    {
-        return [.. (await Task.WhenAll(_playwrightServices.Select(service => service.GetShopStatusAsync())))];
-    }
-    #endregion
 }
