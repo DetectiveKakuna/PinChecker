@@ -79,27 +79,22 @@ catch (ShopScrapeException shopEx)
 {
     Console.WriteLine($"Shop scraping error: {shopEx.Message}");
     
-    // Check if this error is a duplicate
-    var isDuplicate = await errorDeduplicationService.IsErrorDuplicateAsync(shopEx.PageHtml);
+    // Check if we should send an email (5 consecutive occurrences of the same error)
+    var shouldSendEmail = await errorDeduplicationService.ShouldSendErrorEmailAsync(shopEx.PageHtml);
     
-    if (isDuplicate)
+    if (!shouldSendEmail)
     {
-        Console.WriteLine("Error is duplicate of previous error, skipping email notification.");
+        Console.WriteLine("Error threshold not met (need 5 consecutive occurrences), skipping email notification.");
     }
     else
     {
+        Console.WriteLine("Error threshold reached (5 consecutive occurrences), sending email notifications.");
+        
         // Send error email with page HTML
         try
         {
             var emailSent = await emailRepository.SendErrorEmailAsync(shopEx);
             Console.WriteLine($"Error email sent: {emailSent}");
-            
-            // Record this error after successfully sending email
-            if (emailSent)
-            {
-                await errorDeduplicationService.RecordErrorAsync(shopEx.PageHtml);
-                Console.WriteLine("Error recorded for deduplication.");
-            }
         }
         catch (Exception emailEx)
         {

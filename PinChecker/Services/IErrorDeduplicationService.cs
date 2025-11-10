@@ -6,17 +6,12 @@ namespace PinChecker.Services;
 public interface IErrorDeduplicationService
 {
     /// <summary>
-    /// Checks if the error with the given page HTML is a duplicate of the last error.
+    /// Records an error occurrence and checks if an email should be sent.
+    /// Returns true if the error has occurred 5 times consecutively and an email should be sent.
     /// </summary>
     /// <param name="pageHtml">The page HTML content from the error.</param>
-    /// <returns>True if this error is a duplicate, false otherwise.</returns>
-    Task<bool> IsErrorDuplicateAsync(string pageHtml);
-
-    /// <summary>
-    /// Records the error after successfully sending an email.
-    /// </summary>
-    /// <param name="pageHtml">The page HTML content from the error.</param>
-    Task RecordErrorAsync(string pageHtml);
+    /// <returns>True if an email should be sent (5 consecutive occurrences), false otherwise.</returns>
+    Task<bool> ShouldSendErrorEmailAsync(string pageHtml);
 
     /// <summary>
     /// Clears the error history when the application runs successfully.
